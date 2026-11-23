@@ -1,0 +1,48 @@
+<main id="meetflow">
+  <header class="topbar"><div class="wrap bar"><div class="brand"><span class="brandmark" aria-hidden="true"><i></i><i></i><i></i><i></i></span>MeetFlow <span class="ai">AI</span></div>
+  <button type="button" class="topbtn" id="settings" aria-haspopup="dialog"><span class="tune" aria-hidden="true">☷</span>模型设置</button></div></header>
+  <div class="wrap content"><nav class="worknav" aria-label="工作区"><button id="nav-work">会议工作台</button><button id="nav-history">历史会议</button><button id="nav-todos">我的待办</button></nav>
+  <aside id="alarms" aria-live="polite" hidden></aside>
+  <section class="intro"><div><h1 id="pageTitle">MeetFlow</h1><p id="subtitle">从会议原文中提炼结论，理清每一项待办。</p></div><div class="wave" aria-hidden="true"></div></section>
+  <div class="columns"><section class="panel editor"><div class="panelhead"><div class="headgroup"><span class="docicon" aria-hidden="true">≡</span><h2>会议原文</h2></div><button type="button" class="textbtn" id="example">载入示例</button></div>
+  <label class="daylabel">开会日期 <input type="date" id="meetingDay"></label>
+  <label class="sr" for="source">粘贴或编辑会议原文</label><textarea id="source" placeholder="在这里粘贴会议记录或对话转写…" spellcheck="false"></textarea>
+  <pre id="sourceReader" tabindex="0" aria-label="会议原文" hidden></pre>
+  <div class="editorfoot"><span id="count">0 字符</span><button type="button" class="textbtn" id="editSource" hidden>编辑原文</button><button type="button" class="textbtn" id="clear">清空</button></div>
+  <button type="button" id="run" class="primary">整理会议 <span aria-hidden="true">↗</span></button>
+  <button type="button" id="rerun" class="topbtn" hidden>重新整理</button>
+  <div class="modelnote"><span class="dot"></span>Pro 初稿 · Flash 复核</div></section>
+  <section class="panel output"><div class="panelhead"><div class="headgroup"><span class="stackicon" aria-hidden="true">▤</span><h2>整理结果</h2></div><span id="mode" class="chip"></span></div>
+  <div class="tabs" role="tablist" aria-label="整理结果"><button type="button" role="tab" id="stab" aria-selected="true" aria-controls="view">会议摘要</button><button type="button" role="tab" id="ttab" aria-selected="false" aria-controls="view">待办清单 <b id="n"></b></button></div>
+  <div id="view" role="tabpanel" aria-labelledby="stab"></div>
+  <div class="resultfoot"><span id="meta"></span><button class="topbtn" id="saveMeeting">保存会议</button><button type="button" class="textbtn" id="copy">复制结果</button></div></section></div>
+  <section id="archive" class="panel" hidden><div class="filters"><input id="searchMeet" type="search" placeholder="搜索会议标题或原文" aria-label="搜索会议"><button id="newMeeting" class="topbtn">新建会议</button></div><div id="meetingList"></div></section>
+  <section id="planner" class="panel" hidden><div class="filters"><label>查看范围 <select id="scope"><option value="mine">我负责的</option><option value="unassigned">待认领</option><option value="all">全部待办</option></select></label><button id="identity" class="topbtn">我的姓名与别名</button></div><div id="todoList"></div></section>
+  <p id="notice" role="status" aria-live="polite"></p></div>
+  <dialog id="dialog"><form method="dialog"><div class="modalhead"><h2>模型设置</h2><button type="submit" aria-label="关闭" class="close">×</button></div></form>
+  <p>整理时，DeepSeek V4 Pro 生成摘要和待办，Flash 对照原文复核。</p><label for="key">DeepSeek API Key</label><input type="password" id="key" autocomplete="off" spellcheck="false" placeholder="sk-…">
+  <p id="keynote">密钥仅在当前页面使用，刷新后需重新输入。</p>
+  <div id="connection" role="status" aria-live="polite">尚未验证</div>
+  <button type="button" id="checkkey" class="primary">测试连接</button>
+  <fieldset class="batchbox"><legend>批量评测</legend>
+    <label for="suite">测试内容</label><select id="suite">
+    <option value="en">原有 20 篇英文会议 · v3</option>
+    <option value="regression">复测上轮 4 篇校验失败会议 · v3</option>
+    <option value="zh">20 个中文逐字稿片段 · v3</option>
+    <option value="compare">中文同集对比 · v1 / v2 / v3</option></select>
+    <p>将调用模型并按用量计费，结果保存在项目的 benchmark/runs。</p>
+    <button type="button" id="batchrun" class="topbtn">开始评测</button>
+    <p id="batchstate" role="status" aria-live="polite"></p>
+  </fieldset><button type="button" id="savekey" class="textbtn">返回工作台</button></dialog>
+  <dialog id="editTask"><form id="editForm"><h2>修订待办</h2>
+    <label>行动<input id="editAction" required maxlength="1500"></label>
+    <label>负责人<input id="editOwner" maxlength="200" placeholder="待确认"></label>
+    <label>期限描述<input id="editDue" maxlength="300" placeholder="如：周五前"></label>
+    <label>截止日期<input id="editDate" type="date"></label>
+    <label>站内提醒<select id="editMode"><option value="auto">截止日当天 09:00</option><option value="custom">指定时间</option><option value="off">关闭提醒</option></select></label>
+    <small>改期时如沿用旧的指定时间，提醒将调整为新截止日 09:00。</small>
+    <label id="timeLabel" hidden>提醒时间<input id="editTime" type="datetime-local"></label>
+    <p id="editError" role="alert"></p><div class="filters"><button class="topbtn" type="button" id="editCancel">取消</button><button class="topbtn" type="submit">保存修订</button></div></form></dialog>
+  <dialog id="nameDialog"><form id="nameForm"><h2>我的姓名与别名</h2><label>多个称呼用逗号分隔<input id="names" placeholder="姓名、英文名或会议昵称"></label><p>用于匹配负责人并显示个人提醒。</p><div class="filters"><button type="button" class="topbtn" id="nameCancel">取消</button><button class="topbtn" type="submit">保存</button></div></form></dialog>
+</main>
+

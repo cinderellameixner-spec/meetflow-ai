@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; base-uri 'none'; form-action 'none'">
+<title>MeetFlow · 会议工作台</title>
+<style>
+:root{--ink:#162e28;--sub:#52655f;--line:#d4ded5;--paper:#f6f7f0;--green:#1b604d;--mint:#def1cb;--white:#fffefa}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:15px/1.65 "Inter","Microsoft YaHei",system-ui,sans-serif}button,a{font:inherit}button{cursor:pointer}a{color:var(--green)}button:focus-visible,a:focus-visible{outline:3px solid #cf8a19;outline-offset:3px}
+main,header>div{max-width:1230px;padding:0 clamp(16px,4vw,48px);margin:auto}header{border-bottom:1px solid var(--line);background:var(--white)}header>div,nav,.row,.head,.foot{display:flex;align-items:center;justify-content:space-between;gap:12px}header>div{height:62px}.brand{font-size:23px;font-weight:750;letter-spacing:-1.4px}.mark{color:var(--green);letter-spacing:-2px;margin-right:9px}nav a{color:var(--sub);font-size:13px;text-decoration:none}nav a:hover{text-decoration:underline}.pill,.tag{border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;background:var(--mint);color:#245437}.hero{padding:35px 0 25px}.hero h1{font-size:clamp(28px,4vw,48px);letter-spacing:-.05em;line-height:1.2;margin:10px 0}.hero p,.hint,.meta{color:var(--sub);margin:0}.hero p{font-size:14px}.reset,.muted,.act{border:1px solid var(--line);background:var(--white);color:var(--ink);border-radius:8px;padding:5px 11px}.reset{white-space:nowrap}.act{background:var(--green);color:white;border-color:var(--green)}.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:20px}.pane{min-width:0;background:var(--white);border:1px solid var(--line);border-radius:16px;overflow:hidden}.head{border-bottom:1px solid var(--line);padding:16px 20px;min-height:66px}.head h2{font-size:19px;margin:0}.meta{font-size:12px}.inside{padding:18px 20px}.source{max-height:540px;overflow-y:auto;scrollbar-width:thin}.speech{padding:7px 10px;border-radius:8px;margin:0 0 3px}.speech b{display:block;color:var(--green);font-size:12px}.speech p{margin:2px 0 4px}mark{background:#e6ee91;color:var(--ink);border-radius:3px;box-decoration-break:clone}.tabs{display:flex;gap:4px;background:#edf0e8;padding:3px;border-radius:8px}.tabs button{background:none;color:var(--sub);border:0;padding:4px 10px;border-radius:6px}.tabs [aria-pressed=true]{background:var(--green);color:white}.hint{font-size:13px}.task{margin-top:12px;border:1px solid var(--line);border-radius:10px;padding:12px 14px}.task.chosen{border-color:var(--green);background:#f4f9ef}.title{border:0;background:transparent;padding:0;text-align:left;font-weight:700;color:var(--ink)}.done .title{text-decoration:line-through;color:var(--sub)}.task small{display:block;color:var(--sub);margin-top:3px}.actions{display:flex;align-items:center;gap:8px;margin-top:8px}.actions button{font-size:12px}.check{width:19px;height:19px;cursor:pointer;accent-color:var(--green)}.candidate{border-style:dashed}.summary h3{margin:16px 0 4px;font-size:15px}.summary ul{padding-left:20px;margin:0}.foot{padding:0 0 22px;color:var(--sub);font-size:12px;flex-wrap:wrap}.foot a{text-decoration:none}.screen{position:absolute;clip-path:inset(50%);height:1px;width:1px;overflow:hidden}@media(max-width:760px){.grid{grid-template-columns:1fr}.pane.result{order:-1}.source{max-height:unset}.hero{padding:24px 0 18px}.head,.inside{padding:13px 15px}.hero h1{font-size:28px}.head h2{font-size:17px}}
+</style></head><body>
+<header><div><span class="brand"><span class="mark" aria-hidden="true">▂▆▃</span>MeetFlow</span><nav><span class="pill">交互演示</span><a href="https://github.com/cinderellameixner-spec/meetflow-ai">GitHub ↗</a></nav></div></header>
+<main><section class="hero"><div class="row"><div><span class="meta">产品周会 · 合成示例</span><h1>新版工作台上线准备</h1></div><button id="reset" class="reset">重置演示</button></div><p>查看会议结论，核对每项待办的原文，再决定哪些行动需要跟进。</p></section>
+<div class="grid"><section class="pane"><div class="head"><h2 id="origin">会议原文</h2><span class="meta">3 位发言人</span></div><div class="inside source" id="source"></div></section>
+<section class="pane result"><div class="head"><h2>整理结果</h2><div class="tabs"><button id="t" aria-pressed="true">待办</button><button id="s" aria-pressed="false">摘要</button></div></div><div id="result" class="inside"></div></section></div>
+<div class="foot"><span>预置会议回放 · 所有操作在浏览器内完成，模型调用次数为 0。</span><a href="https://github.com/cinderellameixner-spec/meetflow-ai/blob/main/MeetFlow-Review-Comparison.md">查看模型评测 ↗</a></div><span class="screen" id="notice" role="status"></span></main>
+<script>
+const sample={
+  "text": "产品周会 · 新版工作台上线准备\n\n林然：今天主要确认新版工作台的灰度范围，以及上线前还缺哪些准备。\n陈晨：内测的 12 位同学都走完了主流程，比较集中的反馈是首次进入时找不到导入入口。\n林然：那这次先把导入入口移到首页，其他布局保持不变。周五先向 10% 的用户开放。\n许宁：要不要同时加一段引导视频？我觉得可能对新用户有帮助。\n林然：视频先保留为备选，等灰度反馈再决定。陈晨，周四前把首页导入入口的交互稿发到项目群。\n陈晨：收到。\n许宁：我周五上午整理好灰度用户的反馈表。\n林然：上线前还要补一份回滚清单，负责人会后再定。",
+  "summary": {
+    "title": "新版工作台上线准备",
+    "overview": "内测的 12 位同学均已走完主流程，但首次进入时较难找到导入入口。团队决定调整入口位置，并在周五开始小范围灰度。",
+    "decisions": [
+      "将导入入口移至首页，保留其他布局。",
+      "周五先向 10% 的用户开放新版工作台。"
+    ],
+    "open_questions": [
+      "是否增加引导视频，待灰度反馈后决定。",
+      "回滚清单的负责人仍待确认。"
+    ]
+  },
+  "tasks": [
+    {
+      "action": "向 10% 的用户开放新版工作台",
+      "owner": null,
+      "due": "周五",
+      "evidence": "周五先向 10% 的用户开放。",
+      "citations": {
+        "action": {
+          "quote": "周五先向 10% 的用户开放。",
+          "start": 120,
+          "end": 135,
+          "line": 5
+        },
+        "due": {
+          "quote": "周五先向 10% 的用户开放。",
+          "start": 120,
+          "end": 135,
+          "line": 5
+        }
+      }
+    },
+    {
+      "action": "将首页导入入口的交互稿发到项目群",
+      "owner": "陈晨",
+      "due": "周四前",
+      "evidence": "陈晨，周四前把首页导入入口的交互稿发到项目群。",
+      "citations": {
+        "action": {
+          "quote": "陈晨，周四前把首页导入入口的交互稿发到项目群。",
+          "start": 187,
+          "end": 210,
+          "line": 7
+        },
+        "owner": {
+          "quote": "陈晨，周四前把首页导入入口的交互稿发到项目群。",
+          "start": 187,
+          "end": 210,
+          "line": 7
+        },
+        "due": {
+          "quote": "陈晨，周四前把首页导入入口的交互稿发到项目群。",
+          "start": 187,
+          "end": 210,
+          "line": 7
+        }
+      }
+    },
+    {
+      "action": "整理灰度用户反馈表",
+      "owner": "许宁",
+      "due": "周五上午",
+      "evidence": "许宁：我周五上午整理好灰度用户的反馈表。",
+      "citations": {
+        "action": {
+          "quote": "许宁：我周五上午整理好灰度用户的反馈表。",
+          "start": 218,
+          "end": 238,
+          "line": 9
+        },
+        "owner": {
+          "quote": "许宁：我周五上午整理好灰度用户的反馈表。",
+          "start": 218,
+          "end": 238,
+          "line": 9
+        },
+        "due": {
+          "quote": "许宁：我周五上午整理好灰度用户的反馈表。",
+          "start": 218,
+          "end": 238,
+          "line": 9
+        }
+      }
+    },
+    {
+      "action": "补充上线回滚清单",
+      "owner": null,
+      "due": "上线前",
+      "evidence": "上线前还要补一份回滚清单，负责人会后再定。",
+      "citations": {
+        "action": {
+          "quote": "上线前还要补一份回滚清单，负责人会后再定。",
+          "start": 242,
+          "end": 263,
+          "line": 10
+        },
+        "due": {
+          "quote": "上线前还要补一份回滚清单，负责人会后再定。",
+          "start": 242,
+          "end": 263,
+          "line": 10
+        }
+      }
+    }
+  ]
+}
+;
+const lines=sample.text.split('\n').filter(x=>x.includes('：'));
+const $=id=>document.getElementById(id);
+function el(tag,txt,cls){const node=document.createElement(tag);if(txt!==undefined)node.textContent=txt;if(cls)node.className=cls;return node}
+let status,selected,view;
+function sources(id,scroll=false){selected=id;$('source').replaceChildren();let target;
+ const evidence=sample.tasks[id]?.evidence;
+ for(const line of lines){const block=el('div',undefined,'speech');const k=line.indexOf('：')+1;const pos=evidence?line.indexOf(evidence):-1;const name=el('b',line.slice(0,k-1));const p=el('p');
+ if(pos<0)p.textContent=line.slice(k);else{const start=Math.max(k,pos);p.append(line.slice(k,start),el('mark',line.slice(start,pos+evidence.length)),line.slice(pos+evidence.length));target=block}
+ block.append(name,p);$('source').append(block)}
+ document.querySelectorAll('.task').forEach(card=>card.classList.toggle('chosen',+card.dataset.id===id));
+ if(scroll&&target)target.scrollIntoView({block:'nearest',behavior:'smooth'});
+}
+function btn(text,cls,act){const b=el('button',text,cls);b.onclick=act;return b}
+function render(){const out=$('result');out.replaceChildren();$('t').setAttribute('aria-pressed',view==='tasks');$('s').setAttribute('aria-pressed',view==='summary');
+ if(view==='summary'){const d=el('div',undefined,'summary');d.append(el('p',sample.summary.overview));for(const [name,entries] of [['已确认结论',sample.summary.decisions],['待确认问题',sample.summary.open_questions]]){const list=el('ul');entries.forEach(x=>list.append(el('li',x)));d.append(el('h3',name),list)}out.append(d);sources(-1);return}
+ out.append(el('p','悬停、聚焦或点按待办标题，即可在原文中定位依据。','hint'));
+ sample.tasks.forEach((task,id)=>{const st=status[id];if(st==='dismissed')return;
+ const card=el('article',undefined,'task'+(st==='candidate'?' candidate':'')+(st==='done'?' done':''));card.dataset.id=id;const row=el('div',undefined,'row');const title=btn(task.action,'title',()=>sources(id,true));title.onfocus=()=>sources(id);title.onmouseenter=()=>sources(id);row.append(title);
+ if(st==='candidate')row.append(el('span','待确认','tag'));else{const check=el('input');check.type='checkbox';check.className='check';check.checked=st==='done';check.setAttribute('aria-label','标记完成：'+task.action);check.onchange=()=>{status[id]=check.checked?'done':'active';card.classList.toggle('done',check.checked);$('notice').textContent=check.checked?'已完成':'已恢复'};row.append(check)}
+ card.append(row,el('small','负责人 '+(task.owner||'待确认')+'　·　期限 '+(task.due||'待确认')));
+ if(st==='candidate'){const acts=el('div',undefined,'actions');for(const [label,v,cls] of [['加入待办','active','act'],['略过','dismissed','muted']])acts.append(btn(label,cls,()=>{status[id]=v;$('notice').textContent=label;render();$('reset').focus()}));card.append(acts)}
+ out.append(card)});sources(status[selected]==='dismissed'?-1:selected)}
+function reset(){status=sample.tasks.map((_,i)=>i===3?'candidate':'active');view='tasks';selected=1;render()}
+$('reset').onclick=reset;$('s').onclick=()=>{view='summary';render()};$('t').onclick=()=>{view='tasks';render()};reset();
+</script></body></html>
